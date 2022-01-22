@@ -1,7 +1,7 @@
 # Get Ip Region
 This module return the region of an ip address. It has a database(redis) with all the ipv4 cidr address stored in sorted manner. If any request comes, it use binary search to efficiently serach the ip.
 
-The ips stored is database like below:
+The ips' stored in database like below:
 
 ```
 {
