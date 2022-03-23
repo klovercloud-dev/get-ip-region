@@ -3,29 +3,29 @@ package ipLocationService
 import (
 	"bytes"
 	"fmt"
+	"github.com/klovercloud-dev/get-ip-region/enums"
 	"math"
 	"net"
 	"strconv"
 	"strings"
 )
 
-func AddIpRange(ipBlocks []IpBlock)  {
+func AddIpRange(ipBlocks []IpBlock) {
 	var temp IpRange
-	for i:=0; i<len(ipBlocks); i++{
+	for i := 0; i < len(ipBlocks); i++ {
 		temp = GetIpRange(ipBlocks[i].Cidr)
 		ipBlocks[i].FirstHost = temp.First
 		ipBlocks[i].LastHost = temp.Last
 	}
 }
 
-func Sort(ipBlock []IpBlock){
+func Sort(ipBlock []IpBlock) {
 	var temp IpBlock
-	var i int
-	var j int
+	var i, j int
 	length := len(ipBlock)
-	for i =0; i<length; i++{
-		for j = 0; j< length-1 ; j++{
-			if whichBlockBig(ipBlock[j], ipBlock[j+1]) == "first"{
+	for i = 0; i < length; i++ {
+		for j = 0; j < length-1; j++ {
+			if whichBlockBig(ipBlock[j], ipBlock[j+1]) == "first" {
 				temp = ipBlock[j]
 				ipBlock[j] = ipBlock[j+1]
 				ipBlock[j+1] = temp
@@ -35,39 +35,39 @@ func Sort(ipBlock []IpBlock){
 }
 
 func whichBlockBig(a IpBlock, b IpBlock) string {
-	if bytes.Compare(a.LastHost, b.FirstHost) == 1{
+	if bytes.Compare(a.LastHost, b.FirstHost) == 1 {
 		return "first"
-	}else {
+	} else {
 		return "second"
 	}
 }
 
 func GetCountry(ip net.IP) string {
-	blocks := GetSortedIpBlocks("ipblocks")
+	blocks := GetSortedIpBlocks(string(enums.IPBLOCKS))
 	size := len(blocks)
 
 	index := binarySearch(blocks, 0, int64(size-1), ip)
 
-	if index == -1{
+	if index == -1 {
 		return ""
-	}else {
+	} else {
 		return blocks[index].Country
 	}
 }
 
 func binarySearch(blocks []IpBlock, start int64, end int64, ip net.IP) int64 {
-	mid := int64((end + start)/2)
+	mid := int64((end + start) / 2)
 
-	if start> mid{
+	if start > mid {
 		return -1
 	}
 
 	if IsIpBetween(ip, blocks[mid].Cidr) == true {
-		return  mid
-	}else if bytes.Compare(ip, blocks[mid].LastHost) == 1{
+		return mid
+	} else if bytes.Compare(ip, blocks[mid].LastHost) == 1 {
 		return binarySearch(blocks, mid+1, end, ip)
-	}else{
-		return 	binarySearch(blocks, start, mid, ip)
+	} else {
+		return binarySearch(blocks, start, mid, ip)
 	}
 }
 
@@ -77,7 +77,7 @@ func dupIP(ip net.IP) net.IP {
 	return dup
 }
 
-func GetIpRange(cidr string) IpRange{
+func GetIpRange(cidr string) IpRange {
 	var ipRange IpRange
 
 	cidrParts := strings.Split(cidr, "/")
@@ -87,21 +87,20 @@ func GetIpRange(cidr string) IpRange{
 
 	prefix, _ := strconv.Atoi(cidrParts[1])
 
-	numberOfBlocksToManipulate := math.Ceil(float64(32 - prefix)/float64(8))
+	numberOfBlocksToManipulate := math.Ceil(float64(32-prefix) / float64(8))
 
 	numberOfBit := (32 - prefix) % 8
 	condition := 15 - int(numberOfBlocksToManipulate) + 1
 
-	for i :=  0; i <int(numberOfBlocksToManipulate); i++ {
+	for i := 0; i < int(numberOfBlocksToManipulate); i++ {
 		temp := 15 - i
-		if temp == condition{
+		if temp == condition {
 			ip[temp] = byte(GetHighestRange(ip[temp], numberOfBit))
-		}else{
+		} else {
 			ip[temp] = 255
 		}
 	}
 	ipRange.Last = ip
-	//fmt.Println(ipRange.first)
 	return ipRange
 }
 
@@ -122,11 +121,11 @@ func IsIpBetween(current net.IP, cidr string) bool {
 	return false
 }
 
-func AdjustLength(bin string) string{
+func AdjustLength(bin string) string {
 	count := len(bin)
 	temp := ""
 
-	for i:= 0; i< (8-count); i++{
+	for i := 0; i < (8 - count); i++ {
 		temp += "0"
 	}
 	return temp + bin
@@ -135,22 +134,16 @@ func AdjustLength(bin string) string{
 func GetHighestRange(block uint8, index int) uint64 {
 	bin := strconv.FormatUint(uint64(block), 2)
 	bin = AdjustLength(bin)
-	if(len(bin)< 8){
 
-	}
 	var modifiedBin string
 
-	// fmt.Println("bin: ",bin)
-	for i := 0; i<8; i++{
-		if i >= 8 - index {
+	for i := 0; i < 8; i++ {
+		if i >= 8-index {
 			modifiedBin += "1"
-		}else{
+		} else {
 			modifiedBin += string([]rune(bin)[i])
 		}
 	}
-
-	// fmt.Println("Modified Bin: ", modifiedBin)
-
 	out, _ := strconv.ParseUint(modifiedBin, 2, 8)
 
 	return out

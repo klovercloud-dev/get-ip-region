@@ -1,8 +1,9 @@
 package ipLocationService
 
 import (
-"fmt"
-"github.com/go-redis/redis"
+	"fmt"
+	"github.com/go-redis/redis"
+	"github.com/klovercloud-dev/get-ip-region/enums"
 	"os"
 )
 
@@ -11,17 +12,14 @@ var RedisClient redis.Client
 func InitDb() {
 
 	client := redis.NewClient(&redis.Options{
-		Addr:   os.Getenv("REDIS_CONNECT_URL") + ":" + os.Getenv("REDIS_PORT"),
+		Addr:     os.Getenv(string(enums.REDISCONNECTURL)) + ":" + os.Getenv(string(enums.REDISPORT)),
 		Password: "",
-		DB:       0,  // use default DB
+		DB:       0,
 	})
 
 	pong, err := client.Ping().Result()
 	fmt.Println(pong, err)
-	// Output: PONG <nil>
 
 	RedisClient = *client
-	LoadData("ipblocks")
+	LoadData(string(enums.IPBLOCKS))
 }
-
-
