@@ -14,7 +14,7 @@ func InitDb() {
 	client := redis.NewClient(&redis.Options{
 		Addr:     os.Getenv(string(enums.REDISCONNECTURL)) + ":" + os.Getenv(string(enums.REDISPORT)),
 		Password: "",
-		DB:       0,
+		DB:       0, // use default DB
 	})
 
 	pong, err := client.Ping().Result()
